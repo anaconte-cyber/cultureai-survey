@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CultureAI — Voice Survey</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --border: #1e1e2e;
+      --violet: #7c3aed;
+      --violet-glow: #9f67ff;
+      --violet-soft: rgba(124, 58, 237, 0.15);
+      --text: #f0eeff;
+      --muted: #8b84a8;
+      --accent: #c4b5fd;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      overflow: hidden;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 20% 10%, rgba(124, 58, 237, 0.18) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(99, 40, 200, 0.12) 0%, transparent 55%),
+        radial-gradient(ellipse 30% 30% at 50% 50%, rgba(159, 103, 255, 0.06) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Grain overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.4;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      gap: 2.5rem;
+    }
+
+    /* Top label */
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.1s forwards;
+    }
+
+    .eyebrow-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--violet-glow);
+      box-shadow: 0 0 8px var(--violet-glow);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    /* Title */
+    .title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      text-align: center;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.25s forwards;
+    }
+
+    .title span {
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent) 60%, var(--violet-glow) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Subtitle */
+    .subtitle {
+      font-size: 0.95rem;
+      font-weight: 300;
+      color: var(--muted);
+      text-align: center;
+      max-width: 380px;
+      line-height: 1.7;
+      font-style: italic;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.4s forwards;
+    }
+
+    /* Widget card */
+    .widget-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow:
+        0 0 0 1px rgba(124, 58, 237, 0.1),
+        0 20px 60px rgba(0,0,0,0.5),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.55s forwards;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .widget-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--violet-glow), transparent);
+      opacity: 0.4;
+    }
+
+    .widget-hint {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      text-align: center;
+    }
+
+    /* ElevenLabs widget override */
+    elevenlabs-convai {
+      --el-primary: #7c3aed;
+    }
+
+    /* Mic permission note */
+    .mic-note {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.75s forwards;
+    }
+
+    .mic-note svg {
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    /* Footer */
+    .footer {
+      position: fixed;
+      bottom: 1.5rem;
+      font-size: 0.65rem;
+      color: rgba(139,132,168,0.4);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.9s forwards;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Floating orb */
+    .orb {
+      position: fixed;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%);
+      animation: orbFloat 8s ease-in-out infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 { bottom: -100px; right: -50px; animation-delay: 0s; }
+    .orb-2 { top: -80px; left: -60px; animation-delay: -4s; width: 200px; height: 200px; }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translateY(0) scale(1); }
+      50% { transform: translateY(-30px) scale(1.05); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <div class="container">
+
+    <div class="eyebrow">
+      <span class="eyebrow-dot"></span>
+      Smadex · People &amp; Culture
+    </div>
+
+    <h1 class="title">
+      <span>CultureAI</span><br/>Voice Survey
+    </h1>
+
+    <p class="subtitle">
+      A quick pulse check on how we're doing with our OKRs.<br/>
+      Speak naturally — it's just a conversation.
+    </p>
+
+    <div class="widget-card">
+      <span class="widget-hint">Tap the button and start talking 👇</span>
+
+      <elevenlabs-convai agent-id="agent_0401kp2xn9ntfd2anc0ec33w7rp7"></elevenlabs-convai>
+      <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+    </div>
+
+    <p class="mic-note">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+      </svg>
+      Your browser will ask for microphone access — please allow it
+    </p>
+
+  </div>
+
+  <div class="footer">Smadex AI Lab · Confidential</div>
+
+</body>
+</html>

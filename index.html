@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CultureAI — Voice Survey</title>
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" type="module"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -14,7 +15,6 @@
       --border: #1e1e2e;
       --violet: #7c3aed;
       --violet-glow: #9f67ff;
-      --violet-soft: rgba(124, 58, 237, 0.15);
       --text: #f0eeff;
       --muted: #8b84a8;
       --accent: #c4b5fd;
@@ -28,28 +28,15 @@
       overflow: hidden;
     }
 
-    /* Animated background */
     body::before {
       content: '';
       position: fixed;
       inset: 0;
       background:
         radial-gradient(ellipse 60% 50% at 20% 10%, rgba(124, 58, 237, 0.18) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(99, 40, 200, 0.12) 0%, transparent 55%),
-        radial-gradient(ellipse 30% 30% at 50% 50%, rgba(159, 103, 255, 0.06) 0%, transparent 60%);
+        radial-gradient(ellipse 40% 40% at 80% 80%, rgba(99, 40, 200, 0.12) 0%, transparent 55%);
       pointer-events: none;
       z-index: 0;
-    }
-
-    /* Grain overlay */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.4;
     }
 
     .container {
@@ -61,10 +48,9 @@
       align-items: center;
       justify-content: center;
       padding: 2rem;
-      gap: 2.5rem;
+      gap: 2rem;
     }
 
-    /* Top label */
     .eyebrow {
       display: flex;
       align-items: center;
@@ -92,7 +78,6 @@
       50% { opacity: 0.5; transform: scale(0.8); }
     }
 
-    /* Title */
     .title {
       font-family: 'Syne', sans-serif;
       font-size: clamp(2rem, 5vw, 3.2rem);
@@ -111,7 +96,6 @@
       background-clip: text;
     }
 
-    /* Subtitle */
     .subtitle {
       font-size: 0.95rem;
       font-weight: 300;
@@ -124,7 +108,6 @@
       animation: fadeUp 0.7s ease 0.4s forwards;
     }
 
-    /* Widget card */
     .widget-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -133,9 +116,11 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center;
       gap: 1.2rem;
       width: 100%;
       max-width: 420px;
+      min-height: 140px;
       box-shadow:
         0 0 0 1px rgba(124, 58, 237, 0.1),
         0 20px 60px rgba(0,0,0,0.5),
@@ -143,7 +128,6 @@
       opacity: 0;
       animation: fadeUp 0.8s ease 0.55s forwards;
       position: relative;
-      overflow: hidden;
     }
 
     .widget-card::before {
@@ -164,12 +148,6 @@
       text-align: center;
     }
 
-    /* ElevenLabs widget override */
-    elevenlabs-convai {
-      --el-primary: #7c3aed;
-    }
-
-    /* Mic permission note */
     .mic-note {
       display: flex;
       align-items: center;
@@ -180,12 +158,8 @@
       animation: fadeUp 0.7s ease 0.75s forwards;
     }
 
-    .mic-note svg {
-      color: var(--accent);
-      flex-shrink: 0;
-    }
+    .mic-note svg { color: var(--accent); flex-shrink: 0; }
 
-    /* Footer */
     .footer {
       position: fixed;
       bottom: 1.5rem;
@@ -202,23 +176,24 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Floating orb */
     .orb {
       position: fixed;
-      width: 300px;
-      height: 300px;
       border-radius: 50%;
       background: radial-gradient(circle, rgba(124,58,237,0.08) 0%, transparent 70%);
       animation: orbFloat 8s ease-in-out infinite;
       pointer-events: none;
       z-index: 0;
     }
-    .orb-1 { bottom: -100px; right: -50px; animation-delay: 0s; }
-    .orb-2 { top: -80px; left: -60px; animation-delay: -4s; width: 200px; height: 200px; }
+    .orb-1 { width: 300px; height: 300px; bottom: -100px; right: -50px; }
+    .orb-2 { width: 200px; height: 200px; top: -80px; left: -60px; animation-delay: -4s; }
 
     @keyframes orbFloat {
       0%, 100% { transform: translateY(0) scale(1); }
       50% { transform: translateY(-30px) scale(1.05); }
+    }
+
+    elevenlabs-convai {
+      display: block !important;
     }
   </style>
 </head>
@@ -245,9 +220,7 @@
 
     <div class="widget-card">
       <span class="widget-hint">Tap the button and start talking 👇</span>
-
       <elevenlabs-convai agent-id="agent_0401kp2xn9ntfd2anc0ec33w7rp7"></elevenlabs-convai>
-      <script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
     </div>
 
     <p class="mic-note">
